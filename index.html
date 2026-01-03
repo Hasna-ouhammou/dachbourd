@@ -1,0 +1,1636 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tableau de bord – Assurance Auto</title>
+
+<!-- Materialize -->
+<link rel="stylesheet"
+ href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+
+<!-- Icons -->
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+<!-- Font Awesome -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<!-- Excel -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+<!-- PDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
+<!-- Word -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.21/mammoth.browser.min.js"></script>
+
+<style>
+/* ===== Variables CSS ===== */
+:root {
+  --primary-red: #c62828;
+  --primary-red-dark: #8e0000;
+  --primary-black: #121212;
+  --primary-gray: #2d2d2d;
+  --primary-brown: #795548;
+  --primary-beige: #d7ccc8;
+  --secondary-blue: #1976d2;
+  --secondary-green: #388e3c;
+  --secondary-orange: #f57c00;
+  --text-light: #ffffff;
+  --text-dark: #212121;
+  --bg-light: #f5f5f5;
+  --bg-card: #ffffff;
+  --shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+  --gradient-red: linear-gradient(135deg, #c62828, #8e0000);
+  --gradient-black: linear-gradient(135deg, #121212, #2d2d2d);
+  --gradient-brown: linear-gradient(135deg, #795548, #5d4037);
+}
+
+/* ===== Reset & Base ===== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Montserrat', 'Segoe UI', sans-serif;
+  background-color: var(--bg-light);
+  color: var(--text-dark);
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+/* ===== Layout ===== */
+.app-container {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* ===== Sidebar ===== */
+.sidebar {
+  width: 280px;
+  background: var(--gradient-black);
+  color: var(--text-light);
+  padding: 2rem 0;
+  position: fixed;
+  height: 100vh;
+  overflow-y: auto;
+  z-index: 1000;
+  box-shadow: 5px 0 25px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+}
+
+.logo-container {
+  text-align: center;
+  padding: 0 2rem 2rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: var(--text-light);
+}
+
+.logo i {
+  font-size: 2.5rem;
+  color: var(--primary-red);
+  background: rgba(255, 255, 255, 0.1);
+  padding: 15px;
+  border-radius: 15px;
+}
+
+.nav-menu {
+  padding: 2rem 0;
+}
+
+.nav-item {
+  padding: 1rem 2rem;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border-left: 4px solid transparent;
+}
+
+.nav-item:hover, .nav-item.active {
+  background: rgba(255, 255, 255, 0.05);
+  border-left-color: var(--primary-red);
+}
+
+.nav-item i {
+  font-size: 1.5rem;
+  width: 30px;
+}
+
+.nav-text {
+  font-size: 1.1rem;
+  font-weight: 500;
+}
+
+.sidebar-footer {
+  padding: 2rem;
+  margin-top: auto;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  text-align: center;
+}
+
+.user-profile {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.avatar {
+  width: 50px;
+  height: 50px;
+  background: var(--gradient-red);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.user-info h4 {
+  font-size: 1rem;
+  margin-bottom: 5px;
+}
+
+.user-info p {
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+/* ===== Main Content ===== */
+.main-content {
+  flex: 1;
+  margin-left: 280px;
+  padding: 2rem;
+}
+
+/* ===== Top Bar ===== */
+.top-bar {
+  background: var(--bg-card);
+  border-radius: 20px;
+  padding: 1.5rem 2rem;
+  margin-bottom: 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: var(--shadow);
+}
+
+.search-bar {
+  flex: 1;
+  max-width: 500px;
+}
+
+.search-box {
+  position: relative;
+}
+
+.search-box i {
+  position: absolute;
+  left: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--primary-brown);
+}
+
+.search-box input {
+  width: 100%;
+  padding: 15px 20px 15px 60px;
+  border: 2px solid var(--primary-beige);
+  border-radius: 15px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+.search-box input:focus {
+  border-color: var(--primary-red);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(198, 40, 40, 0.1);
+}
+
+.top-actions {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.notification-btn, .settings-btn {
+  background: var(--primary-beige);
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.notification-btn:hover, .settings-btn:hover {
+  background: var(--primary-brown);
+  color: white;
+  transform: translateY(-3px);
+}
+
+.notification-badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background: var(--primary-red);
+  color: white;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ===== Hero Section ===== */
+.hero-section {
+  background: var(--gradient-brown);
+  border-radius: 25px;
+  padding: 3rem;
+  margin-bottom: 2rem;
+  color: white;
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-section:before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 300px;
+  height: 300px;
+  background: url("data:image/svg+xml,%3Csvg width='300' height='300' viewBox='0 0 300 300' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='150' cy='150' r='150' fill='white' fill-opacity='0.05'/%3E%3C/svg%3E");
+}
+
+.hero-content h1 {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+  font-weight: 800;
+}
+
+.hero-content p {
+  font-size: 1.2rem;
+  opacity: 0.9;
+  max-width: 600px;
+  margin-bottom: 2rem;
+}
+
+.hero-stats {
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.stat-icon {
+  width: 60px;
+  height: 60px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8rem;
+}
+
+.stat-value {
+  font-size: 1.8rem;
+  font-weight: 700;
+}
+
+.stat-label {
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+/* ===== Cards Grid ===== */
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.card {
+  background: var(--bg-card);
+  border-radius: 20px;
+  padding: 2rem;
+  box-shadow: var(--shadow);
+  transition: all 0.3s ease;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.card-title {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--primary-black);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-icon {
+  width: 50px;
+  height: 50px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  color: white;
+}
+
+.card-icon.red { background: var(--gradient-red); }
+.card-icon.black { background: var(--gradient-black); }
+.card-icon.brown { background: var(--gradient-brown); }
+.card-icon.blue { background: linear-gradient(135deg, #1976d2, #0d47a1); }
+
+/* ===== Import Card ===== */
+.import-options {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.import-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: var(--bg-light);
+  border: 2px dashed var(--primary-beige);
+  border-radius: 15px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.import-btn:hover {
+  border-color: var(--primary-red);
+  background: rgba(198, 40, 40, 0.05);
+}
+
+.import-btn i {
+  font-size: 2rem;
+  margin-bottom: 10px;
+  color: var(--primary-brown);
+}
+
+.import-btn span {
+  font-weight: 600;
+  color: var(--primary-gray);
+}
+
+/* ===== Filter Card ===== */
+.filter-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.filter-item {
+  position: relative;
+}
+
+.filter-item label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: var(--primary-gray);
+  font-size: 0.9rem;
+}
+
+.filter-select {
+  width: 100%;
+  padding: 12px 15px;
+  border: 2px solid var(--primary-beige);
+  border-radius: 10px;
+  background: white;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+.filter-select:focus {
+  border-color: var(--primary-red);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(198, 40, 40, 0.1);
+}
+
+.filter-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.filter-actions button {
+  flex: 1;
+  padding: 15px;
+  border: none;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.btn-clear {
+  background: var(--primary-beige);
+  color: var(--primary-gray);
+}
+
+.btn-reset {
+  background: var(--gradient-red);
+  color: white;
+}
+
+.btn-clear:hover, .btn-reset:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+/* ===== Stats Cards ===== */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.stat-card {
+  background: var(--bg-card);
+  border-radius: 20px;
+  padding: 2rem;
+  box-shadow: var(--shadow);
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-card:before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 6px;
+  height: 100%;
+}
+
+.stat-card.blue:before { background: var(--secondary-blue); }
+.stat-card.green:before { background: var(--secondary-green); }
+.stat-card.orange:before { background: var(--secondary-orange); }
+
+.stat-card-content {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.stat-card-icon {
+  width: 70px;
+  height: 70px;
+  border-radius: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  color: white;
+}
+
+.stat-card.blue .stat-card-icon { background: var(--secondary-blue); }
+.stat-card.green .stat-card-icon { background: var(--secondary-green); }
+.stat-card.orange .stat-card-icon { background: var(--secondary-orange); }
+
+.stat-card-value {
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: var(--primary-black);
+  line-height: 1;
+  margin-bottom: 5px;
+}
+
+.stat-card-label {
+  color: var(--primary-gray);
+  font-size: 0.9rem;
+}
+
+/* ===== Table Section ===== */
+.table-section {
+  background: var(--bg-card);
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  margin-bottom: 2rem;
+}
+
+.table-header {
+  background: var(--gradient-black);
+  padding: 1.5rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.table-header h3 {
+  color: white;
+  font-size: 1.5rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.table-actions {
+  display: flex;
+  gap: 1rem;
+}
+
+.table-action-btn {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+}
+
+.table-action-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+}
+
+.table-container {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+thead {
+  background: #f8f9fa;
+}
+
+thead th {
+  padding: 1.5rem;
+  text-align: left;
+  font-weight: 700;
+  color: var(--primary-black);
+  border-bottom: 2px solid #e9ecef;
+  white-space: nowrap;
+}
+
+tbody tr {
+  border-bottom: 1px solid #e9ecef;
+  transition: all 0.3s ease;
+}
+
+tbody tr:hover {
+  background: linear-gradient(90deg, rgba(198, 40, 40, 0.03), rgba(198, 40, 40, 0.01));
+}
+
+tbody td {
+  padding: 1.5rem;
+  color: var(--primary-gray);
+}
+
+/* ===== Badges ===== */
+.badge {
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  display: inline-block;
+  text-align: center;
+  min-width: 100px;
+}
+
+.badge-red { background: var(--gradient-red); color: white; }
+.badge-black { background: var(--gradient-black); color: white; }
+.badge-brown { background: var(--gradient-brown); color: white; }
+
+/* ===== Client Info ===== */
+.client-info {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.client-avatar {
+  width: 40px;
+  height: 40px;
+  background: var(--gradient-brown);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+}
+
+.client-details h4 {
+  font-weight: 700;
+  color: var(--primary-black);
+  margin-bottom: 5px;
+}
+
+.client-details p {
+  font-size: 0.85rem;
+  color: var(--primary-gray);
+}
+
+/* ===== File Content Display ===== */
+.file-content-section {
+  background: var(--bg-card);
+  border-radius: 20px;
+  padding: 2rem;
+  box-shadow: var(--shadow);
+  display: none;
+}
+
+.file-content-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.file-content-header h4 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--primary-black);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.close-btn {
+  background: var(--primary-beige);
+  border: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.close-btn:hover {
+  background: var(--primary-red);
+  color: white;
+}
+
+.file-content-body {
+  max-height: 400px;
+  overflow-y: auto;
+  padding: 1.5rem;
+  background: #f8f9fa;
+  border-radius: 15px;
+  font-family: 'Monaco', 'Courier New', monospace;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: var(--primary-gray);
+}
+
+/* ===== Active Filters ===== */
+.active-filters {
+  background: rgba(121, 85, 72, 0.05);
+  border-radius: 15px;
+  padding: 1.5rem;
+  margin-top: 1.5rem;
+  border-left: 4px solid var(--primary-brown);
+}
+
+.active-filters h5 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--primary-black);
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.filter-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.filter-badge {
+  background: white;
+  border: 1px solid var(--primary-beige);
+  border-radius: 20px;
+  padding: 8px 16px;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.filter-badge i {
+  cursor: pointer;
+  color: var(--primary-gray);
+  transition: all 0.3s ease;
+}
+
+.filter-badge i:hover {
+  color: var(--primary-red);
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 1200px) {
+  .sidebar {
+    width: 250px;
+  }
+  
+  .main-content {
+    margin-left: 250px;
+  }
+}
+
+@media (max-width: 992px) {
+  .sidebar {
+    transform: translateX(-100%);
+  }
+  
+  .main-content {
+    margin-left: 0;
+  }
+  
+  .cards-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .hero-stats {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 768px) {
+  .main-content {
+    padding: 1rem;
+  }
+  
+  .hero-section {
+    padding: 2rem;
+  }
+  
+  .table-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  .table-actions {
+    width: 100%;
+  }
+  
+  .table-action-btn {
+    flex: 1;
+    justify-content: center;
+  }
+}
+
+/* ===== Animation ===== */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.card, .stat-card, .table-section {
+  animation: fadeInUp 0.5s ease-out forwards;
+}
+
+/* ===== Scrollbar ===== */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--primary-brown);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-red);
+}
+</style>
+
+</head>
+
+<body>
+<div class="app-container">
+  
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="logo-container">
+      <div class="logo">
+        <i class="material-icons">directions_car</i>
+        <span>Assurance Auto</span>
+      </div>
+      <p style="margin-top: 10px; opacity: 0.8; font-size: 0.9rem;">Ouarzazate</p>
+    </div>
+    
+    <nav class="nav-menu">
+      <div class="nav-item active">
+        <i class="material-icons">dashboard</i>
+        <span class="nav-text">Tableau de bord</span>
+      </div>
+      <div class="nav-item">
+        <i class="material-icons">person</i>
+        <span class="nav-text">Clients</span>
+      </div>
+      <div class="nav-item">
+        <i class="material-icons">description</i>
+        <span class="nav-text">Contrats</span>
+      </div>
+      <div class="nav-item">
+        <i class="material-icons">analytics</i>
+        <span class="nav-text">Analytics</span>
+      </div>
+      <div class="nav-item">
+        <i class="material-icons">payments</i>
+        <span class="nav-text">Paiements</span>
+      </div>
+      <div class="nav-item">
+        <i class="material-icons">settings</i>
+        <span class="nav-text">Paramètres</span>
+      </div>
+    </nav>
+    
+    <div class="sidebar-footer">
+      <div class="user-profile">
+        <div class="avatar">
+          <span>AM</span>
+        </div>
+        <div class="user-info">
+          <h4>Admin Manager</h4>
+          <p>Administrateur</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Main Content -->
+  <div class="main-content">
+    
+    <!-- Top Bar -->
+    <div class="top-bar">
+      <div class="search-bar">
+        <div class="search-box">
+          <i class="material-icons">search</i>
+          <input type="text" placeholder="Rechercher un client, un contrat...">
+        </div>
+      </div>
+      
+      <div class="top-actions">
+        <div class="notification-btn">
+          <i class="material-icons">notifications</i>
+          <span class="notification-badge">3</span>
+        </div>
+        <div class="settings-btn">
+          <i class="material-icons">settings</i>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Hero Section -->
+    <div class="hero-section">
+      <div class="hero-content">
+        <h1>Tableau de Bord Assurance</h1>
+        <p>Gérez vos clients, contrats et statistiques en temps réel avec notre interface intuitive.</p>
+        
+        <div class="hero-stats">
+          <div class="stat-item">
+            <div class="stat-icon">
+              <i class="material-icons">groups</i>
+            </div>
+            <div>
+              <div class="stat-value" id="totalClients">20</div>
+              <div class="stat-label">Clients actifs</div>
+            </div>
+          </div>
+          
+          <div class="stat-item">
+            <div class="stat-icon">
+              <i class="material-icons">trending_up</i>
+            </div>
+            <div>
+              <div class="stat-value" id="growthRate">12%</div>
+              <div class="stat-label">Croissance ce mois</div>
+            </div>
+          </div>
+          
+          <div class="stat-item">
+            <div class="stat-icon">
+              <i class="material-icons">calendar_today</i>
+            </div>
+            <div>
+              <div class="stat-value">15</div>
+              <div class="stat-label">Renouvellements ce mois</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Stats Cards -->
+    <div class="stats-grid">
+      <div class="stat-card blue">
+        <div class="stat-card-content">
+          <div class="stat-card-icon">
+            <i class="material-icons">payments</i>
+          </div>
+          <div>
+            <div class="stat-card-value" id="totalPrimes">0 DH</div>
+            <div class="stat-card-label">Total des primes</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="stat-card green">
+        <div class="stat-card-content">
+          <div class="stat-card-icon">
+            <i class="material-icons">description</i>
+          </div>
+          <div>
+            <div class="stat-card-value" id="nbContrats">0</div>
+            <div class="stat-card-label">Contrats actifs</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="stat-card orange">
+        <div class="stat-card-content">
+          <div class="stat-card-icon">
+            <i class="material-icons">analytics</i>
+          </div>
+          <div>
+            <div class="stat-card-value" id="primeMoyenne">0 DH</div>
+            <div class="stat-card-label">Prime moyenne</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Cards Grid -->
+    <div class="cards-grid">
+      <!-- Import Card -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <div class="card-icon red">
+              <i class="material-icons">cloud_upload</i>
+            </div>
+            <span>Importer des données</span>
+          </div>
+        </div>
+        
+        <p style="margin-bottom: 1rem; color: var(--primary-gray);">
+          Importez des fichiers Excel, PDF ou Word pour enrichir votre base de données.
+        </p>
+        
+        <div class="import-options">
+          <div class="import-btn" onclick="document.getElementById('fileInput').click()">
+            <i class="material-icons">table_chart</i>
+            <span>Excel</span>
+          </div>
+          
+          <div class="import-btn" onclick="document.getElementById('fileInput').click()">
+            <i class="material-icons">picture_as_pdf</i>
+            <span>PDF</span>
+          </div>
+          
+          <div class="import-btn" onclick="document.getElementById('fileInput').click()">
+            <i class="material-icons">description</i>
+            <span>Word</span>
+          </div>
+        </div>
+        
+        <input type="file" id="fileInput" accept=".xlsx,.xls,.pdf,.docx" style="display: none;">
+        
+        <div style="margin-top: 1.5rem; font-size: 0.9rem; color: var(--primary-brown);">
+          <i class="material-icons" style="vertical-align: middle; font-size: 1rem;">info</i>
+          Les données par défaut sont déjà chargées
+        </div>
+      </div>
+      
+      <!-- Filters Card -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <div class="card-icon black">
+              <i class="material-icons">filter_alt</i>
+            </div>
+            <span>Filtres</span>
+          </div>
+        </div>
+        
+        <div class="filter-row">
+          <div class="filter-item">
+            <label><i class="material-icons tiny">location_city</i> Ville</label>
+            <select id="villeFilter" class="filter-select">
+              <option value="">Toutes les villes</option>
+            </select>
+          </div>
+          
+          <div class="filter-item">
+            <label><i class="material-icons tiny">directions_car</i> Véhicule</label>
+            <select id="vehiculeFilter" class="filter-select">
+              <option value="">Tous les véhicules</option>
+            </select>
+          </div>
+        </div>
+        
+        <div class="filter-row">
+          <div class="filter-item">
+            <label><i class="material-icons tiny">security</i> Assurance</label>
+            <select id="assuranceFilter" class="filter-select">
+              <option value="">Tous les types</option>
+            </select>
+          </div>
+          
+          <div class="filter-item">
+            <label><i class="material-icons tiny">calendar_today</i> Année</label>
+            <select id="anneeFilter" class="filter-select">
+              <option value="">Toutes années</option>
+              <option value="2010-2015">2010-2015</option>
+              <option value="2016-2020">2016-2020</option>
+              <option value="2021-2025">2021-2025</option>
+            </select>
+          </div>
+        </div>
+        
+        <!-- Active Filters -->
+        <div class="active-filters" id="activeFilters" style="display: none;">
+          <h5><i class="material-icons">filter_list</i> Filtres actifs</h5>
+          <div class="filter-badges" id="filtersList"></div>
+        </div>
+        
+        <div class="filter-actions">
+          <button class="btn-clear" id="clearFilters">
+            <i class="material-icons">clear_all</i>
+            Effacer
+          </button>
+          
+          <button class="btn-reset" id="resetFilters">
+            <i class="material-icons">refresh</i>
+            Réinitialiser
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Table Section -->
+    <div class="table-section">
+      <div class="table-header">
+        <h3><i class="material-icons">table_chart</i> Liste des Clients</h3>
+        
+        <div class="table-actions">
+          <button class="table-action-btn">
+            <i class="material-icons">print</i>
+            Imprimer
+          </button>
+          <button class="table-action-btn">
+            <i class="material-icons">download</i>
+            Exporter
+          </button>
+        </div>
+      </div>
+      
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Client</th>
+              <th>Ville</th>
+              <th>Véhicule</th>
+              <th>Assurance</th>
+              <th>Prime</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+    </div>
+    
+    <!-- File Content Display -->
+    <div class="file-content-section" id="fileContent">
+      <div class="file-content-header">
+        <h4><i class="material-icons">description</i> Contenu du fichier</h4>
+        <button class="close-btn" onclick="document.getElementById('fileContent').style.display='none'">
+          <i class="material-icons">close</i>
+        </button>
+      </div>
+      <div class="file-content-body" id="fileContentText"></div>
+    </div>
+    
+  </div> <!-- End Main Content -->
+</div> <!-- End App Container -->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+
+<script>
+// Le code JavaScript reste principalement le même avec quelques adaptations
+let data = [];
+let filteredData = [];
+
+// Données Excel par défaut
+const defaultExcelData = [
+  { ID_Client: 1, Nom: "El Amrani", Prénom: "Youssef", CIN: "AB00001", Ville: "Ouarzazate", Type_Vehicule: "Moto", Marque: "Renault", Année_Vehicule: 2011, Valeur_Vehicule: 93000, Type_Assurance: "Tiers+", Date_Souscription: "2025-01-02", Durée: 12, Prime_Base: 1560, Taux_Risque: "5%", Montant_Risque: 0, Prime_Totale: 1560 },
+  { ID_Client: 2, Nom: "Ait Lahcen", Prénom: "Fatima", CIN: "AB00002", Ville: "Ouarzazate", Type_Vehicule: "Camion", Marque: "Toyota", Année_Vehicule: 2012, Valeur_Vehicule: 96000, Type_Assurance: "Tous Risques", Date_Souscription: "2025-01-03", Durée: 12, Prime_Base: 1620, Taux_Risque: "6%", Montant_Risque: 0, Prime_Totale: 1620 },
+  { ID_Client: 3, Nom: "Benali", Prénom: "Ahmed", CIN: "AB00003", Ville: "Marrakech", Type_Vehicule: "Voiture", Marque: "Hyundai", Année_Vehicule: 2013, Valeur_Vehicule: 99000, Type_Assurance: "Tiers", Date_Souscription: "2025-01-04", Durée: 12, Prime_Base: 1680, Taux_Risque: "3%", Montant_Risque: 0, Prime_Totale: 1680 },
+  { ID_Client: 4, Nom: "El Idrissi", Prénom: "Salma", CIN: "AB00004", Ville: "Rabat", Type_Vehicule: "Moto", Marque: "Ford", Année_Vehicule: 2014, Valeur_Vehicule: 102000, Type_Assurance: "Tiers+", Date_Souscription: "2025-01-05", Durée: 12, Prime_Base: 1740, Taux_Risque: "5%", Montant_Risque: 0, Prime_Totale: 1740 },
+  { ID_Client: 5, Nom: "Chraibi", Prénom: "Mohamed", CIN: "AB00005", Ville: "Casablanca", Type_Vehicule: "Camion", Marque: "Peugeot", Année_Vehicule: 2015, Valeur_Vehicule: 105000, Type_Assurance: "Tous Risques", Date_Souscription: "2025-01-06", Durée: 12, Prime_Base: 1800, Taux_Risque: "6%", Montant_Risque: 0, Prime_Totale: 1800 },
+  { ID_Client: 6, Nom: "Tahiri", Prénom: "Khadija", CIN: "AB00006", Ville: "Agadir", Type_Vehicule: "Voiture", Marque: "Dacia", Année_Vehicule: 2016, Valeur_Vehicule: 108000, Type_Assurance: "Tiers", Date_Souscription: "2025-01-07", Durée: 12, Prime_Base: 1860, Taux_Risque: "3%", Montant_Risque: 0, Prime_Totale: 1860 },
+  { ID_Client: 7, Nom: "Bennani", Prénom: "Omar", CIN: "AB00007", Ville: "Marrakech", Type_Vehicule: "Moto", Marque: "Renault", Année_Vehicule: 2017, Valeur_Vehicule: 111000, Type_Assurance: "Tiers+", Date_Souscription: "2025-01-08", Durée: 12, Prime_Base: 1920, Taux_Risque: "5%", Montant_Risque: 0, Prime_Totale: 1920 },
+  { ID_Client: 8, Nom: "El Fassi", Prénom: "Imane", CIN: "AB00008", Ville: "Fes", Type_Vehicule: "Camion", Marque: "Toyota", Année_Vehicule: 2018, Valeur_Vehicule: 114000, Type_Assurance: "Tous Risques", Date_Souscription: "2025-01-09", Durée: 12, Prime_Base: 1980, Taux_Risque: "6%", Montant_Risque: 0, Prime_Totale: 1980 },
+  { ID_Client: 9, Nom: "Alaoui", Prénom: "Hassan", CIN: "AB00009", Ville: "Rabat", Type_Vehicule: "Voiture", Marque: "Hyundai", Année_Vehicule: 2019, Valeur_Vehicule: 117000, Type_Assurance: "Tiers", Date_Souscription: "2025-01-10", Durée: 12, Prime_Base: 2040, Taux_Risque: "3%", Montant_Risque: 0, Prime_Totale: 2040 },
+  { ID_Client: 10, Nom: "Zerouali", Prénom: "Nadia", CIN: "AB00010", Ville: "Agadir", Type_Vehicule: "Moto", Marque: "Ford", Année_Vehicule: 2020, Valeur_Vehicule: 120000, Type_Assurance: "Tiers+", Date_Souscription: "2025-01-11", Durée: 12, Prime_Base: 2100, Taux_Risque: "5%", Montant_Risque: 0, Prime_Totale: 2100 },
+  { ID_Client: 11, Nom: "Skalli", Prénom: "Abdelilah", CIN: "AB00011", Ville: "Casablanca", Type_Vehicule: "Camion", Marque: "Peugeot", Année_Vehicule: 2021, Valeur_Vehicule: 123000, Type_Assurance: "Tous Risques", Date_Souscription: "2025-01-12", Durée: 12, Prime_Base: 2160, Taux_Risque: "6%", Montant_Risque: 0, Prime_Totale: 2160 },
+  { ID_Client: 12, Nom: "Raji", Prénom: "Siham", CIN: "AB00012", Ville: "Marrakech", Type_Vehicule: "Voiture", Marque: "Dacia", Année_Vehicule: 2022, Valeur_Vehicule: 126000, Type_Assurance: "Tiers", Date_Souscription: "2025-01-13", Durée: 12, Prime_Base: 2220, Taux_Risque: "3%", Montant_Risque: 0, Prime_Totale: 2220 },
+  { ID_Client: 13, Nom: "Ouahbi", Prénom: "Anas", CIN: "AB00013", Ville: "Ouarzazate", Type_Vehicule: "Moto", Marque: "Renault", Année_Vehicule: 2023, Valeur_Vehicule: 129000, Type_Assurance: "Tiers+", Date_Souscription: "2025-01-14", Durée: 12, Prime_Base: 2280, Taux_Risque: "5%", Montant_Risque: 0, Prime_Totale: 2280 },
+  { ID_Client: 14, Nom: "Amine", Prénom: "Soukaina", CIN: "AB00014", Ville: "Agadir", Type_Vehicule: "Camion", Marque: "Toyota", Année_Vehicule: 2010, Valeur_Vehicule: 132000, Type_Assurance: "Tous Risques", Date_Souscription: "2025-01-15", Durée: 12, Prime_Base: 2340, Taux_Risque: "6%", Montant_Risque: 0, Prime_Totale: 2340 },
+  { ID_Client: 15, Nom: "Mouline", Prénom: "Rachid", CIN: "AB00015", Ville: "Casablanca", Type_Vehicule: "Voiture", Marque: "Hyundai", Année_Vehicule: 2011, Valeur_Vehicule: 135000, Type_Assurance: "Tiers", Date_Souscription: "2025-01-16", Durée: 12, Prime_Base: 2400, Taux_Risque: "3%", Montant_Risque: 0, Prime_Totale: 2400 },
+  { ID_Client: 16, Nom: "Lahlou", Prénom: "Sara", CIN: "AB00016", Ville: "Rabat", Type_Vehicule: "Moto", Marque: "Ford", Année_Vehicule: 2012, Valeur_Vehicule: 138000, Type_Assurance: "Tiers+", Date_Souscription: "2025-01-17", Durée: 12, Prime_Base: 2460, Taux_Risque: "5%", Montant_Risque: 0, Prime_Totale: 2460 },
+  { ID_Client: 17, Nom: "Kabbaj", Prénom: "Yassine", CIN: "AB00017", Ville: "Marrakech", Type_Vehicule: "Camion", Marque: "Peugeot", Année_Vehicule: 2013, Valeur_Vehicule: 141000, Type_Assurance: "Tous Risques", Date_Souscription: "2025-01-18", Durée: 12, Prime_Base: 2520, Taux_Risque: "6%", Montant_Risque: 0, Prime_Totale: 2520 },
+  { ID_Client: 18, Nom: "Bouzidi", Prénom: "Amina", CIN: "AB00018", Ville: "Ouarzazate", Type_Vehicule: "Voiture", Marque: "Dacia", Année_Vehicule: 2014, Valeur_Vehicule: 144000, Type_Assurance: "Tiers", Date_Souscription: "2025-01-19", Durée: 12, Prime_Base: 2580, Taux_Risque: "3%", Montant_Risque: 0, Prime_Totale: 2580 },
+  { ID_Client: 19, Nom: "El Mansouri", Prénom: "Karim", CIN: "AB00019", Ville: "Agadir", Type_Vehicule: "Moto", Marque: "Renault", Année_Vehicule: 2015, Valeur_Vehicule: 147000, Type_Assurance: "Tiers+", Date_Souscription: "2025-01-20", Durée: 12, Prime_Base: 2640, Taux_Risque: "5%", Montant_Risque: 0, Prime_Totale: 2640 },
+  { ID_Client: 20, Nom: "Haddad", Prénom: "Latifa", CIN: "AB00020", Ville: "Casablanca", Type_Vehicule: "Camion", Marque: "Toyota", Année_Vehicule: 2016, Valeur_Vehicule: 150000, Type_Assurance: "Tous Risques", Date_Souscription: "2025-01-21", Durée: 12, Prime_Base: 2700, Taux_Risque: "6%", Montant_Risque: 0, Prime_Totale: 2700 }
+];
+
+// Charger les données par défaut au démarrage
+document.addEventListener('DOMContentLoaded', function() {
+  data = defaultExcelData;
+  filteredData = [...data];
+  displayData(filteredData);
+  initializeFilters();
+  updateStats();
+  
+  // Initialiser les animations
+  setTimeout(() => {
+    document.querySelectorAll('.card, .stat-card, .table-section').forEach((el, index) => {
+      el.style.animationDelay = `${index * 0.1}s`;
+    });
+  }, 100);
+});
+
+// Initialiser les filtres
+function initializeFilters() {
+  const villes = [...new Set(data.map(item => item.Ville).filter(Boolean))].sort();
+  const vehicules = [...new Set(data.map(item => item.Type_Vehicule).filter(Boolean))].sort();
+  const assurances = [...new Set(data.map(item => item.Type_Assurance).filter(Boolean))].sort();
+  
+  const villeSelect = document.getElementById('villeFilter');
+  const vehiculeSelect = document.getElementById('vehiculeFilter');
+  const assuranceSelect = document.getElementById('assuranceFilter');
+  
+  // Ajouter les options pour les villes
+  villes.forEach(ville => {
+    const option = document.createElement('option');
+    option.value = ville;
+    option.textContent = ville;
+    villeSelect.appendChild(option);
+  });
+  
+  // Ajouter les options pour les véhicules
+  vehicules.forEach(vehicule => {
+    const option = document.createElement('option');
+    option.value = vehicule;
+    option.textContent = vehicule;
+    vehiculeSelect.appendChild(option);
+  });
+  
+  // Ajouter les options pour les assurances
+  assurances.forEach(assurance => {
+    const option = document.createElement('option');
+    option.value = assurance;
+    option.textContent = assurance;
+    assuranceSelect.appendChild(option);
+  });
+  
+  // Écouter les changements de filtres
+  villeSelect.addEventListener('change', applyFilters);
+  vehiculeSelect.addEventListener('change', applyFilters);
+  assuranceSelect.addEventListener('change', applyFilters);
+  
+  // Bouton pour effacer les filtres
+  document.getElementById('clearFilters').addEventListener('click', clearFilters);
+  document.getElementById('resetFilters').addEventListener('click', resetView);
+  
+  // Gestion de l'import de fichiers
+  document.getElementById('fileInput').addEventListener('change', handleFile);
+}
+
+// Appliquer les filtres
+function applyFilters() {
+  const selectedVille = document.getElementById('villeFilter').value;
+  const selectedVehicule = document.getElementById('vehiculeFilter').value;
+  const selectedAssurance = document.getElementById('assuranceFilter').value;
+  const selectedAnnee = document.getElementById('anneeFilter').value;
+  
+  filteredData = data.filter(item => {
+    const villeMatch = !selectedVille || item.Ville === selectedVille;
+    const vehiculeMatch = !selectedVehicule || item.Type_Vehicule === selectedVehicule;
+    const assuranceMatch = !selectedAssurance || item.Type_Assurance === selectedAssurance;
+    
+    // Filtre par année
+    let anneeMatch = true;
+    if (selectedAnnee) {
+      const annee = item.Année_Vehicule;
+      if (selectedAnnee === "2010-2015") anneeMatch = annee >= 2010 && annee <= 2015;
+      else if (selectedAnnee === "2016-2020") anneeMatch = annee >= 2016 && annee <= 2020;
+      else if (selectedAnnee === "2021-2025") anneeMatch = annee >= 2021 && annee <= 2025;
+    }
+    
+    return villeMatch && vehiculeMatch && assuranceMatch && anneeMatch;
+  });
+  
+  displayData(filteredData);
+  updateActiveFilters();
+  updateStats();
+}
+
+// Mettre à jour les filtres actifs
+function updateActiveFilters() {
+  const selectedVille = document.getElementById('villeFilter').value;
+  const selectedVehicule = document.getElementById('vehiculeFilter').value;
+  const selectedAssurance = document.getElementById('assuranceFilter').value;
+  const selectedAnnee = document.getElementById('anneeFilter').value;
+  
+  const filtersList = document.getElementById('filtersList');
+  const activeFiltersDiv = document.getElementById('activeFilters');
+  filtersList.innerHTML = '';
+  
+  const filters = [];
+  
+  if (selectedVille) {
+    filters.push({type: 'Ville', value: selectedVille, icon: 'location_city'});
+  }
+  if (selectedVehicule) {
+    filters.push({type: 'Véhicule', value: selectedVehicule, icon: 'directions_car'});
+  }
+  if (selectedAssurance) {
+    filters.push({type: 'Assurance', value: selectedAssurance, icon: 'security'});
+  }
+  if (selectedAnnee) {
+    filters.push({type: 'Année', value: selectedAnnee, icon: 'calendar_today'});
+  }
+  
+  if (filters.length > 0) {
+    filters.forEach(filter => {
+      const badge = document.createElement('div');
+      badge.className = 'filter-badge';
+      badge.innerHTML = `
+        <i class="material-icons tiny" onclick="removeFilter('${filter.type}')">close</i>
+        ${filter.type}: ${filter.value}
+      `;
+      filtersList.appendChild(badge);
+    });
+    activeFiltersDiv.style.display = 'block';
+  } else {
+    activeFiltersDiv.style.display = 'none';
+  }
+}
+
+// Supprimer un filtre spécifique
+function removeFilter(filterType) {
+  switch(filterType) {
+    case 'Ville':
+      document.getElementById('villeFilter').value = '';
+      break;
+    case 'Véhicule':
+      document.getElementById('vehiculeFilter').value = '';
+      break;
+    case 'Assurance':
+      document.getElementById('assuranceFilter').value = '';
+      break;
+    case 'Année':
+      document.getElementById('anneeFilter').value = '';
+      break;
+  }
+  
+  applyFilters();
+}
+
+// Effacer tous les filtres
+function clearFilters() {
+  document.getElementById('villeFilter').value = '';
+  document.getElementById('vehiculeFilter').value = '';
+  document.getElementById('assuranceFilter').value = '';
+  document.getElementById('anneeFilter').value = '';
+  
+  filteredData = [...data];
+  displayData(filteredData);
+  updateActiveFilters();
+  updateStats();
+}
+
+// Réinitialiser complètement la vue
+function resetView() {
+  clearFilters();
+  document.getElementById('fileInput').value = '';
+  document.getElementById('fileContent').style.display = 'none';
+  
+  // Afficher un message de confirmation
+  showNotification('Vue réinitialisée avec succès', 'success');
+}
+
+// Mettre à jour les statistiques
+function updateStats() {
+  const total = filteredData.reduce((sum, item) => sum + Number(item.Prime_Totale || 0), 0);
+  const average = filteredData.length ? total / filteredData.length : 0;
+  
+  document.getElementById('totalPrimes').textContent = total.toLocaleString() + ' DH';
+  document.getElementById('nbContrats').textContent = filteredData.length;
+  document.getElementById('primeMoyenne').textContent = average.toFixed(2) + ' DH';
+  document.getElementById('totalClients').textContent = filteredData.length;
+}
+
+// Afficher les données dans le tableau
+function displayData(list) {
+  const tbody = document.getElementById('tableBody');
+  tbody.innerHTML = '';
+  
+  list.forEach(d => {
+    const typeAssurance = d.Type_Assurance || '';
+    
+    let badgeClass = 'badge-black';
+    if (typeAssurance.includes('Tous Risques') || typeAssurance.includes('Tous risques')) {
+      badgeClass = 'badge-red';
+    } else if (typeAssurance.includes('Tiers+')) {
+      badgeClass = 'badge-brown';
+    }
+
+    tbody.innerHTML += `
+      <tr>
+        <td>
+          <div class="client-info">
+            <div class="client-avatar">${(d.Prénom || '').charAt(0)}${(d.Nom || '').charAt(0)}</div>
+            <div class="client-details">
+              <h4>${d.Nom || ''} ${d.Prénom || ''}</h4>
+              <p>${d.CIN || ''}</p>
+            </div>
+          </div>
+        </td>
+        <td><span style="font-weight: 500;">${d.Ville || ''}</span></td>
+        <td>
+          <div style="font-weight: 500;">${d.Type_Vehicule || ''}</div>
+          <div style="font-size: 0.85rem; color: #666;">${d.Marque || ''} (${d.Année_Vehicule || ''})</div>
+        </td>
+        <td><span class="badge ${badgeClass}">${typeAssurance}</span></td>
+        <td style="font-weight: 700; color: #c62828; font-size: 1.1rem;">${d.Prime_Totale || 0} DH</td>
+        <td>
+          <button style="background: none; border: none; color: #1976d2; cursor: pointer;">
+            <i class="material-icons">visibility</i>
+          </button>
+        </td>
+      </tr>`;
+  });
+  
+  updateStats();
+}
+
+// Gestion de l'import de fichiers
+function handleFile(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  
+  const ext = file.name.split('.').pop().toLowerCase();
+
+  if (ext === 'xlsx' || ext === 'xls') readExcel(file);
+  else if (ext === 'pdf') readPDF(file);
+  else if (ext === 'docx') readWord(file);
+  else {
+    showNotification('Format de fichier non supporté', 'error');
+  }
+}
+
+function readExcel(file) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    const workbook = XLSX.read(e.target.result, { type: 'binary' });
+    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    const newData = XLSX.utils.sheet_to_json(sheet);
+    
+    // Fusionner les nouvelles données avec les données existantes
+    data = [...data, ...newData];
+    filteredData = [...data];
+    displayData(filteredData);
+    
+    // Mettre à jour les filtres avec les nouvelles données
+    updateFilters();
+    updateActiveFilters();
+    
+    // Afficher une notification
+    showNotification(`${newData.length} clients importés avec succès`, 'success');
+  };
+  reader.readAsBinaryString(file);
+}
+
+function updateFilters() {
+  const villes = [...new Set(data.map(item => item.Ville).filter(Boolean))].sort();
+  const vehicules = [...new Set(data.map(item => item.Type_Vehicule).filter(Boolean))].sort();
+  const assurances = [...new Set(data.map(item => item.Type_Assurance).filter(Boolean))].sort();
+  
+  const villeSelect = document.getElementById('villeFilter');
+  const vehiculeSelect = document.getElementById('vehiculeFilter');
+  const assuranceSelect = document.getElementById('assuranceFilter');
+  
+  // Garder la sélection actuelle
+  const currentVille = villeSelect.value;
+  const currentVehicule = vehiculeSelect.value;
+  const currentAssurance = assuranceSelect.value;
+  
+  // Vider les options (sauf la première)
+  while (villeSelect.options.length > 1) villeSelect.remove(1);
+  while (vehiculeSelect.options.length > 1) vehiculeSelect.remove(1);
+  while (assuranceSelect.options.length > 1) assuranceSelect.remove(1);
+  
+  // Ajouter les nouvelles options
+  villes.forEach(ville => {
+    const option = document.createElement('option');
+    option.value = ville;
+    option.textContent = ville;
+    villeSelect.appendChild(option);
+  });
+  
+  vehicules.forEach(vehicule => {
+    const option = document.createElement('option');
+    option.value = vehicule;
+    option.textContent = vehicule;
+    vehiculeSelect.appendChild(option);
+  });
+  
+  assurances.forEach(assurance => {
+    const option = document.createElement('option');
+    option.value = assurance;
+    option.textContent = assurance;
+    assuranceSelect.appendChild(option);
+  });
+  
+  // Restaurer la sélection
+  villeSelect.value = currentVille;
+  vehiculeSelect.value = currentVehicule;
+  assuranceSelect.value = currentAssurance;
+}
+
+/* PDF */
+function readPDF(file) {
+  const reader = new FileReader();
+  reader.onload = async () => {
+    const pdf = await pdfjsLib.getDocument(reader.result).promise;
+    let text = '';
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const content = await page.getTextContent();
+      text += content.items.map(item => item.str).join(' ');
+    }
+    showText(text);
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+/* Word */
+function readWord(file) {
+  const reader = new FileReader();
+  reader.onload = () => {
+    mammoth.extractRawText({ arrayBuffer: reader.result })
+      .then(result => showText(result.value));
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function showText(text) {
+  const div = document.getElementById('fileContent');
+  const textDiv = document.getElementById('fileContentText');
+  div.style.display = 'block';
+  textDiv.textContent = text;
+  
+  // Faire défiler vers le contenu
+  div.scrollIntoView({ behavior: 'smooth' });
+}
+
+// Fonction pour afficher des notifications
+function showNotification(message, type = 'info') {
+  // Créer l'élément de notification
+  const notification = document.createElement('div');
+  notification.style.cssText = `
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 15px 20px;
+    border-radius: 10px;
+    color: white;
+    font-weight: 600;
+    z-index: 10000;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    animation: slideIn 0.3s ease-out;
+  `;
+  
+  if (type === 'success') {
+    notification.style.background = 'linear-gradient(135deg, #4caf50, #2e7d32)';
+  } else if (type === 'error') {
+    notification.style.background = 'linear-gradient(135deg, #f44336, #d32f2f)';
+  } else {
+    notification.style.background = 'linear-gradient(135deg, #1976d2, #0d47a1)';
+  }
+  
+  notification.innerHTML = `
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <i class="material-icons">${type === 'success' ? 'check_circle' : type === 'error' ? 'error' : 'info'}</i>
+      <span>${message}</span>
+    </div>
+  `;
+  
+  document.body.appendChild(notification);
+  
+  // Retirer la notification après 3 secondes
+  setTimeout(() => {
+    notification.style.animation = 'slideOut 0.3s ease-out forwards';
+    setTimeout(() => {
+      document.body.removeChild(notification);
+    }, 300);
+  }, 3000);
+}
+
+// Ajouter les animations CSS pour les notifications
+const style = document.createElement('style');
+style.textContent = `
+  @keyframes slideIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+  
+  @keyframes slideOut {
+    from { transform: translateX(0); opacity: 1; }
+    to { transform: translateX(100%); opacity: 0; }
+  }
+`;
+document.head.appendChild(style);
+</script>
+
+</body>
+</html>
